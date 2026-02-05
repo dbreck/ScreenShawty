@@ -1,5 +1,10 @@
 # ScreenShawty
 
+## Skills to Engage
+When starting a new session on this project, use:
+- **swiftui-developer** — for any SwiftUI view or state management work
+- **macos-swiftui** — for macOS-specific patterns (MenuBarExtra, NSWindow, etc.)
+
 ## About
 macOS menu bar utility for controlling screenshot defaults and shrinking clipboard images. No dock icon — lives entirely in the menu bar.
 
@@ -9,6 +14,7 @@ macOS menu bar utility for controlling screenshot defaults and shrinking clipboa
 - **Language:** Swift 5.9+
 - **External Dependency:** [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) 2.x (via SPM)
 - **Bundle ID:** `com.clearph.screenshawty`
+- **Repo:** [github.com/dbreck/ScreenShawty](https://github.com/dbreck/ScreenShawty) (public)
 
 ## Project Structure
 ```
@@ -18,20 +24,26 @@ ScreenShawty/
 │   ├── ScreenShawtyApp.swift          # @main entry, MenuBarExtra setup, shortcut registration
 │   ├── ContentView.swift                # Main menu: location, format, toggles, clipboard actions
 │   ├── ScreenshotManager.swift          # Reads/writes com.apple.screencapture defaults via Process
-│   ├── ClipboardImageProcessor.swift    # Singleton — resize, compress, format convert clipboard images
+│   ├── ClipboardImageProcessor.swift    # Singleton — resize, compress, format convert, auto-shrink monitor
 │   ├── ClipboardSettingsView.swift      # Settings window (Form) + SettingsWindowController (NSWindow)
 │   ├── GlobalShortcutManager.swift      # KeyboardShortcuts extension, registers ⌃⌥⌘S
 │   ├── NotificationManager.swift        # UNUserNotificationCenter wrapper
 │   ├── LaunchAtLoginManager.swift       # SMAppService register/unregister
 │   ├── Info.plist                       # LSUIElement = true (no dock icon)
 │   ├── ScreenShawty.entitlements
-│   └── Assets.xcassets/
-└── SPEC.md
+│   └── Assets.xcassets/                 # App icon + accent color
+├── scripts/
+│   └── build-release.sh                 # Automated archive → sign → notarize → DMG pipeline
+├── ExportOptions.plist                  # Xcode archive export config (developer-id method)
+├── assets/                              # README images (icon, screenshots)
+├── README.md
+├── SPEC.md
+└── CLAUDE.md
 ```
 
 ## Architecture Notes
 - **ScreenshotManager** is `@Observable`, injected via `.environment()`. Reads/writes `com.apple.screencapture` defaults using `/usr/bin/defaults` Process calls. Debounces `killall SystemUIServer` by 300ms.
-- **ClipboardImageProcessor** is `@Observable` with a `.shared` singleton. Settings (maxWidth, quality, format, etc.) persist to UserDefaults via `didSet`. The global shortcut calls `ClipboardImageProcessor.shared.shrinkClipboardImage()`.
+- **ClipboardImageProcessor** is `@Observable` with a `.shared` singleton. Settings (maxWidth, quality, format, etc.) persist to UserDefaults via `didSet`. The global shortcut calls `ClipboardImageProcessor.shared.shrinkClipboardImage()`. Auto-shrink monitors clipboard via `changeCount` polling on a 1s timer.
 - **Settings window** uses `SettingsWindowController` (manages an NSWindow with NSHostingView) rather than a SwiftUI Window scene — more reliable for menu bar apps.
 - **Location: Clipboard** sets `defaults write com.apple.screencapture target clipboard`. Selecting any file location clears the `target` key.
 
@@ -57,6 +69,7 @@ Or open `ScreenShawty.xcodeproj` in Xcode and press ⌘R.
 - `customScreenshotLocation` — last custom folder path
 - `clipMaxWidth`, `clipMaxHeight`, `clipUseCustomHeight` — resize settings
 - `clipOutputFormat`, `clipQuality`, `clipStripMetadata` — compression settings
+- `clipAutoShrink` — auto-shrink clipboard toggle
 
 ## Current Version
 1.0.0
@@ -64,19 +77,12 @@ Or open `ScreenShawty.xcodeproj` in Xcode and press ⌘R.
 ## Release / Distribution
 
 ### Code Signing
-- **Identity:** Developer ID Application (Team: `7DMXWUCLVN`)
+- **Identity:** Developer ID Application: Daniel Breckenridge (Team: `7DMXWUCLVN`)
 - **Hardened Runtime:** Enabled (no special entitlements needed)
-- Release config in `project.pbxproj` has `CODE_SIGN_IDENTITY` and `DEVELOPMENT_TEAM` set
+- Release config uses `CODE_SIGN_STYLE = Manual` (required — Automatic conflicts with Developer ID)
 
-### One-time Setup: Notarization Credentials
-Store your App Store Connect credentials in the keychain so the build script can notarize:
-```bash
-xcrun notarytool store-credentials "ScreenShawty" \
-    --apple-id YOUR_APPLE_ID \
-    --team-id 7DMXWUCLVN \
-    --password APP_SPECIFIC_PASSWORD
-```
-Generate the app-specific password at [appleid.apple.com](https://appleid.apple.com/account/manage) → Sign-In and Security → App-Specific Passwords.
+### Notarization Credentials
+Already stored in keychain as profile `"ScreenShawty"` (Apple ID: dbreck@gmail.com).
 
 ### Build a Release
 ```bash
@@ -93,15 +99,21 @@ gh release create v1.0.0 build/ScreenShawty-1.0.0.dmg \
     --notes "Initial release"
 ```
 
-### Key Files
-| File | Purpose |
-|------|---------|
-| `scripts/build-release.sh` | Automated build → sign → notarize → DMG pipeline |
-| `ExportOptions.plist` | Xcode archive export config (developer-id method) |
+## Open Bugs
+- **Screenshots not saving to ~/Screenshots** — Location is set correctly in `com.apple.screencapture` defaults, SystemUIServer was restarted, but screenshots don't appear in the folder. Needs investigation. Possibly a macOS permissions issue or the `location` default isn't being respected. Check if the issue reproduces with other folders (Desktop, Downloads).
+
+## In Progress / Next Session TODO
+1. **Notarization stuck** — Apple's notarization service was unresponsive all day (Feb 5, 2026). 4 submissions all stuck "In Progress." Latest submission ID: `179c0a52-2bf5-4508-b2e8-495f339b78d6`. Next session: check `xcrun notarytool history --keychain-profile "ScreenShawty"` — if any completed, staple and create GitHub release. If still stuck, resubmit.
+2. **Fix screenshot location bug** — Investigate why screenshots aren't saving to the selected folder.
+3. **README screenshots** — Need `assets/screenshot-menu.png` and `assets/screenshot-settings.png`. Take screenshots of the menu and clipboard settings window, save to `assets/`.
+4. **Commit & push** — README, icon assets, and icon-concept.svg are uncommitted.
 
 ## Next Steps
-- [ ] Create GitHub repo
+- [x] Create GitHub repo
 - [x] Code signing with Developer ID for distribution outside App Store
-- [x] Notarization for direct distribution (.dmg / .zip)
+- [x] App icon design
+- [ ] Notarization for direct distribution (blocked by Apple service — recheck next session)
+- [ ] GitHub Release with notarized DMG
+- [ ] README screenshots
+- [ ] Fix screenshot save location bug
 - [ ] App Store submission (will need App Sandbox — requires reworking Process calls to use a privileged helper or XPC service, since sandboxed apps can't run arbitrary shell commands)
-- [ ] App icon design
