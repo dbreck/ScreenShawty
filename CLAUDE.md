@@ -61,9 +61,47 @@ Or open `ScreenShawty.xcodeproj` in Xcode and press ⌘R.
 ## Current Version
 1.0.0
 
+## Release / Distribution
+
+### Code Signing
+- **Identity:** Developer ID Application (Team: `7DMXWUCLVN`)
+- **Hardened Runtime:** Enabled (no special entitlements needed)
+- Release config in `project.pbxproj` has `CODE_SIGN_IDENTITY` and `DEVELOPMENT_TEAM` set
+
+### One-time Setup: Notarization Credentials
+Store your App Store Connect credentials in the keychain so the build script can notarize:
+```bash
+xcrun notarytool store-credentials "ScreenShawty" \
+    --apple-id YOUR_APPLE_ID \
+    --team-id 7DMXWUCLVN \
+    --password APP_SPECIFIC_PASSWORD
+```
+Generate the app-specific password at [appleid.apple.com](https://appleid.apple.com/account/manage) → Sign-In and Security → App-Specific Passwords.
+
+### Build a Release
+```bash
+./scripts/build-release.sh
+```
+This automates: archive → export signed app → notarize → staple → DMG → notarize DMG → verify.
+
+Output: `build/ScreenShawty-{version}.dmg`
+
+### Create a GitHub Release
+```bash
+gh release create v1.0.0 build/ScreenShawty-1.0.0.dmg \
+    --title "ScreenShawty v1.0.0" \
+    --notes "Initial release"
+```
+
+### Key Files
+| File | Purpose |
+|------|---------|
+| `scripts/build-release.sh` | Automated build → sign → notarize → DMG pipeline |
+| `ExportOptions.plist` | Xcode archive export config (developer-id method) |
+
 ## Next Steps
 - [ ] Create GitHub repo
-- [ ] Code signing with Developer ID for distribution outside App Store
+- [x] Code signing with Developer ID for distribution outside App Store
+- [x] Notarization for direct distribution (.dmg / .zip)
 - [ ] App Store submission (will need App Sandbox — requires reworking Process calls to use a privileged helper or XPC service, since sandboxed apps can't run arbitrary shell commands)
 - [ ] App icon design
-- [ ] Notarization for direct distribution (.dmg / .zip)

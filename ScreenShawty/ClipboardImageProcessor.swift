@@ -37,6 +37,20 @@ final class ClipboardImageProcessor {
         didSet { UserDefaults.standard.set(stripMetadata, forKey: "clipStripMetadata") }
     }
 
+    var autoShrinkEnabled: Bool = false {
+        didSet {
+            UserDefaults.standard.set(autoShrinkEnabled, forKey: "clipAutoShrink")
+            if autoShrinkEnabled {
+                startClipboardMonitor()
+            } else {
+                stopClipboardMonitor()
+            }
+        }
+    }
+
+    private var clipboardTimer: Timer?
+    private var lastChangeCount: Int = 0
+
     init() {
         let defaults = UserDefaults.standard
         if defaults.object(forKey: "clipMaxWidth") != nil {
@@ -57,6 +71,13 @@ final class ClipboardImageProcessor {
         }
         if defaults.object(forKey: "clipStripMetadata") != nil {
             stripMetadata = defaults.bool(forKey: "clipStripMetadata")
+        }
+        if defaults.object(forKey: "clipAutoShrink") != nil {
+            autoShrinkEnabled = defaults.bool(forKey: "clipAutoShrink")
+        }
+        lastChangeCount = NSPasteboard.general.changeCount
+        if autoShrinkEnabled {
+            startClipboardMonitor()
         }
     }
 
@@ -200,6 +221,37 @@ final class ClipboardImageProcessor {
         CGImageDestinationAddImage(dest, cgImage, options as CFDictionary)
         guard CGImageDestinationFinalize(dest) else { return nil }
         return data as Data
+    }
+
+    // MARK: - Clipboard Monitor
+
+    private func startClipboardMonitor() {
+        stopClipboardMonitor()
+        lastChangeCount = NSPasteboard.general.changeCount
+        clipboardTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.checkClipboardForNewImage()
+        }
+    }
+
+    private func stopClipboardMonitor() {
+        clipboardTimer?.invalidate()
+        clipboardTimer = nil
+    }
+
+    private func checkClipboardForNewImage() {
+        let pasteboard = NSPasteboard.general
+        let currentCount = pasteboard.changeCount
+        guard currentCount != lastChangeCount else { return }
+        lastChangeCount = currentCount
+
+        guard NSImage(pasteboard: pasteboard) != nil else { return }
+
+        // Brief delay to ensure clipboard is fully written
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.shrinkClipboardImage()
+            // Update changeCount after our own write to avoid re-triggering
+            self?.lastChangeCount = NSPasteboard.general.changeCount
+        }
     }
 
     // MARK: - Clipboard Write

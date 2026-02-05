@@ -31,6 +31,11 @@ struct ContentView: View {
             processor.shrinkClipboardImage()
         }
 
+        Toggle("Auto-Shrink Clipboard", isOn: Binding(
+            get: { processor.autoShrinkEnabled },
+            set: { processor.autoShrinkEnabled = $0 }
+        ))
+
         Button("Clipboard Settings\u{2026}") {
             SettingsWindowController.shared.show()
         }
