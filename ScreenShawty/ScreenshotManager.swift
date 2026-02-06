@@ -38,8 +38,6 @@ final class ScreenshotManager {
         UserDefaults.standard.string(forKey: "customScreenshotLocation")
     }
 
-    private var restartTask: Task<Void, Never>?
-
     init() {
         refreshState()
     }
@@ -100,37 +98,31 @@ final class ScreenshotManager {
         if path != home + "/Desktop" && path != home + "/Downloads" && path != home + "/Screenshots" {
             UserDefaults.standard.set(path, forKey: "customScreenshotLocation")
         }
-        debouncedRestart()
     }
 
     func setClipboardDestination() {
         writeDefault(key: "target", value: "clipboard")
         isClipboardDestination = true
-        debouncedRestart()
     }
 
     func setFormat(_ format: ImageFormat) {
         writeDefault(key: "type", value: format.defaultsValue)
         currentFormat = format
-        debouncedRestart()
     }
 
     func setShadow(_ enabled: Bool) {
         writeDefault(key: "disable-shadow", value: enabled ? "0" : "1", type: "bool")
         shadowEnabled = enabled
-        debouncedRestart()
     }
 
     func setThumbnail(_ enabled: Bool) {
         writeDefault(key: "show-thumbnail", value: enabled ? "1" : "0", type: "bool")
         thumbnailEnabled = enabled
-        debouncedRestart()
     }
 
     func setIncludeDate(_ enabled: Bool) {
         writeDefault(key: "include-date", value: enabled ? "1" : "0", type: "bool")
         includeDateEnabled = enabled
-        debouncedRestart()
     }
 
     func chooseCustomLocation() {
@@ -188,19 +180,4 @@ final class ScreenshotManager {
         task.waitUntilExit()
     }
 
-    private func debouncedRestart() {
-        restartTask?.cancel()
-        restartTask = Task {
-            try? await Task.sleep(for: .milliseconds(300))
-            guard !Task.isCancelled else { return }
-            restartSystemUIServer()
-        }
-    }
-
-    private func restartSystemUIServer() {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
-        task.arguments = ["SystemUIServer"]
-        try? task.run()
-    }
 }

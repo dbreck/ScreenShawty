@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/screenshot-menu.png" width="320" alt="ScreenShawty menu">
+  <img src="assets/screenshawty-interface.png" width="420" alt="ScreenShawty menu bar interface">
 </p>
 
 ---
@@ -37,12 +37,12 @@ ScreenShawty lives in your menu bar and gives you instant control over macOS scr
 ### Clipboard Image Shrinking
 
 - **Shrink Clipboard Image** — Resize and compress whatever image is on your clipboard
-- **Auto-Shrink** — Automatically shrink every image that hits your clipboard
+- **Auto-Shrink** — Automatically shrink every image that hits your clipboard (great for pasting screenshots into chat or email)
 - **Global shortcut** — `⌃⌥⌘S` to shrink from anywhere
 - **Configurable** — Set max width/height, output format (PNG/JPEG/HEIC), quality, and metadata stripping
 
 <p align="center">
-  <img src="assets/screenshot-settings.png" width="480" alt="Clipboard Settings">
+  <img src="assets/clipboard-image-settings.png" width="420" alt="Clipboard Image Settings window">
 </p>
 
 ## Install
@@ -50,6 +50,8 @@ ScreenShawty lives in your menu bar and gives you instant control over macOS scr
 ### Download
 
 Grab the latest `.dmg` from [**Releases**](https://github.com/dbreck/ScreenShawty/releases), open it, and drag ScreenShawty to Applications.
+
+> ScreenShawty is signed with a Developer ID certificate and notarized by Apple for safe distribution outside the App Store.
 
 ### Build from source
 
@@ -63,7 +65,7 @@ Requires Xcode 15+ and macOS 14.0+ (Sonoma).
 
 ## How it works
 
-ScreenShawty reads and writes `com.apple.screencapture` defaults — the same system macOS uses internally. Changes take effect immediately (SystemUIServer is restarted automatically).
+ScreenShawty reads and writes `com.apple.screencapture` defaults — the same system macOS uses internally. Changes take effect immediately.
 
 | Setting | defaults key | Values |
 |---------|-------------|--------|
@@ -74,12 +76,16 @@ ScreenShawty reads and writes `com.apple.screencapture` defaults — the same sy
 | Thumbnail | `show-thumbnail` | `true`/`false` |
 | Include date | `include-date` | `true`/`false` |
 
+The clipboard shrinking feature works independently — it reads the current clipboard image, resizes/compresses it based on your settings, and replaces the clipboard contents. A notification confirms the result with before/after dimensions and file size reduction.
+
 ## Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
 | `⌃⌥⌘S` | Shrink Clipboard Image |
 | `⌘Q` | Quit ScreenShawty |
+
+The shrink shortcut is customizable in Clipboard Settings.
 
 ## Tech
 
@@ -90,7 +96,7 @@ ScreenShawty reads and writes `com.apple.screencapture` defaults — the same sy
 
 ## License
 
-MIT
+[MIT](LICENSE)
 
 ---
 

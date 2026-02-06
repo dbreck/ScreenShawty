@@ -100,20 +100,22 @@ gh release create v1.0.0 build/ScreenShawty-1.0.0.dmg \
 ```
 
 ## Open Bugs
-- **Screenshots not saving to ~/Screenshots** — Location is set correctly in `com.apple.screencapture` defaults, SystemUIServer was restarted, but screenshots don't appear in the folder. Needs investigation. Possibly a macOS permissions issue or the `location` default isn't being respected. Check if the issue reproduces with other folders (Desktop, Downloads).
+- None currently known.
+
+## Known macOS Tahoe (26) Behaviors
+- `killall SystemUIServer` is a no-op for screenshot settings — screenshots are now handled by `screencaptureui.app`, not SystemUIServer. The `defaults write com.apple.screencapture` commands still work; cfprefsd syncs them automatically.
+- The floating thumbnail feature can interfere with screenshot saving (especially PDF format). Disabling `show-thumbnail` works around it.
 
 ## In Progress / Next Session TODO
-1. **Notarization stuck** — Apple's notarization service was unresponsive all day (Feb 5, 2026). 4 submissions all stuck "In Progress." Latest submission ID: `179c0a52-2bf5-4508-b2e8-495f339b78d6`. Next session: check `xcrun notarytool history --keychain-profile "ScreenShawty"` — if any completed, staple and create GitHub release. If still stuck, resubmit.
-2. **Fix screenshot location bug** — Investigate why screenshots aren't saving to the selected folder.
-3. **README screenshots** — Need `assets/screenshot-menu.png` and `assets/screenshot-settings.png`. Take screenshots of the menu and clipboard settings window, save to `assets/`.
-4. **Commit & push** — README, icon assets, and icon-concept.svg are uncommitted.
+1. **Notarization** — Apple's service has been very slow (Feb 5-6, 2026). Submission `f06b7ec4-5251-4b66-9515-ae351255652f` is pending. Check status, staple, create GitHub release.
 
 ## Next Steps
 - [x] Create GitHub repo
 - [x] Code signing with Developer ID for distribution outside App Store
 - [x] App icon design
-- [ ] Notarization for direct distribution (blocked by Apple service — recheck next session)
+- [x] Fix screenshot save location bug (was not a bug — location works, was untested)
+- [x] Remove `killall SystemUIServer` (no-op on macOS 14+; cfprefsd syncs defaults automatically)
+- [x] README screenshots
+- [ ] Notarization for direct distribution (Apple service slow — recheck)
 - [ ] GitHub Release with notarized DMG
-- [ ] README screenshots
-- [ ] Fix screenshot save location bug
 - [ ] App Store submission (will need App Sandbox — requires reworking Process calls to use a privileged helper or XPC service, since sandboxed apps can't run arbitrary shell commands)
