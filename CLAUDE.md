@@ -106,8 +106,12 @@ gh release create v1.0.0 build/ScreenShawty-1.0.0.dmg \
 - `killall SystemUIServer` is a no-op for screenshot settings — screenshots are now handled by `screencaptureui.app`, not SystemUIServer. The `defaults write com.apple.screencapture` commands still work; cfprefsd syncs them automatically.
 - The floating thumbnail feature can interfere with screenshot saving (especially PDF format). Disabling `show-thumbnail` works around it.
 
-## In Progress / Next Session TODO
-1. **Notarization** — Apple's service has been very slow (Feb 5-6, 2026). Submission `f06b7ec4-5251-4b66-9515-ae351255652f` is pending. Check status, staple, create GitHub release.
+## Website
+- **URL:** https://screenshawty.app
+- **Hosting:** GitHub Pages (from `docs/` on `main` branch)
+- **Domain registrar:** Vercel (DNS managed there)
+- **DNS:** 4x A records → GitHub Pages IPs, `www` CNAME → `dbreck.github.io`
+- **Download buttons** link directly to DMG: `https://github.com/dbreck/ScreenShawty/releases/download/v1.0.0/ScreenShawty-1.0.0.dmg` — update these URLs when releasing new versions
 
 ## Next Steps
 - [x] Create GitHub repo
@@ -116,6 +120,7 @@ gh release create v1.0.0 build/ScreenShawty-1.0.0.dmg \
 - [x] Fix screenshot save location bug (was not a bug — location works, was untested)
 - [x] Remove `killall SystemUIServer` (no-op on macOS 14+; cfprefsd syncs defaults automatically)
 - [x] README screenshots
-- [ ] Notarization for direct distribution (Apple service slow — recheck)
-- [ ] GitHub Release with notarized DMG
+- [x] Notarization for direct distribution (accepted Feb 5, 2026; stapled Feb 11)
+- [x] GitHub Release with notarized DMG — https://github.com/dbreck/ScreenShawty/releases/tag/v1.0.0
+- [x] Landing page + custom domain (screenshawty.app)
 - [ ] App Store submission (will need App Sandbox — requires reworking Process calls to use a privileged helper or XPC service, since sandboxed apps can't run arbitrary shell commands)
